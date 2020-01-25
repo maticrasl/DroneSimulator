@@ -775,36 +775,36 @@ void WidgetOpenGLDraw::paintGL() {
 
 void WidgetOpenGLDraw::MoveObjXPlus() {
     makeCurrent();
-    allObjects[selectedObject].pos[X] += 0.2f;
+    drone->pos[X] += 0.2f;
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjXMinus() {
     makeCurrent();
-    allObjects[selectedObject].pos[X] -= 0.2f;
+    drone->pos[X] -= 0.2f;
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjYPlus() {
     makeCurrent();
-    allObjects[selectedObject].pos[Y] += 0.2f;
+    drone->pos[Y] += 0.2f;
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjYMinus() {
     makeCurrent();
-    allObjects[selectedObject].pos[Y] -= 0.2f;
+    drone->pos[Y] -= 0.2f;
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjZPlus() {
     makeCurrent();
-    allObjects[selectedObject].pos[Z] += 0.2f;
+    drone->pos[Z] += 0.2f;
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjZMinus() {
     makeCurrent();
-    allObjects[selectedObject].pos[Z] -= 0.2f;
+    drone->pos[Z] -= 0.2f;
     update();
 }

@@ -48,73 +48,9 @@ void MainWindow::on_pushButton_3_clicked()
     ui->widget->MoveObjZMinus();
 }
 
-void MainWindow::on_bLoad_clicked()
-{
-    QString fileNameObj = ui->inputFileLineEdit->text();
-    QString fileNameTex = ui->inputFileLineEditTexture->text();
-    QString objectName;
-    if(fileNameObj.length() > 3 && fileNameTex.length() > 3) {
-        objectName = QString::number(ui->widget->getObjectCount());
-        objectName = objectName + ". object";
-        ui->objectListComboBox->addItem(objectName);
-        ui->widget->addObject(fileNameObj);
-        ui->widget->setSelectedObject(static_cast<int>(ui->widget->getObjectCount()) - 1);
-        glm::vec3 color = ui->widget->getObjectColor();
-        ui->colorRValue->setValue(static_cast<int>(color[0] * 100.0f));
-        ui->colorGValue->setValue(static_cast<int>(color[1] * 100.0f));
-        ui->colorBValue->setValue(static_cast<int>(color[2] * 100.0f));
-
-        ui->widget->loadTexture(fileNameTex);
-    }
-}
-
 void MainWindow::on_bMoveAround_clicked()
 {
     ui->widget->setFocus();
-}
-
-void MainWindow::on_objectListComboBox_highlighted(int index)
-{
-    ui->widget->setSelectedObject(index + 1);
-    glm::vec3 color = ui->widget->getObjectColor();
-    ui->colorRValue->setValue(static_cast<int>(color[0] * 100.0f));
-    ui->colorGValue->setValue(static_cast<int>(color[1] * 100.0f));
-    ui->colorBValue->setValue(static_cast<int>(color[2] * 100.0f));
-    ui->shiningValue->setValue(ui->widget->getObjectShining());
-}
-
-void MainWindow::updateObjectColor() {
-    glm::vec3 color;
-    color[0] = static_cast<float>(ui->colorRValue->value()) / 100.0f;
-    color[1] = static_cast<float>(ui->colorGValue->value()) / 100.0f;
-    color[2] = static_cast<float>(ui->colorBValue->value()) / 100.0f;
-    ui->widget->setObjectColor(color);
-    ui->widget->setObjectShining(ui->shiningValue->value());
-}
-
-void MainWindow::on_colorRValue_valueChanged(int arg1)
-{
-    updateObjectColor();
-}
-
-void MainWindow::on_colorGValue_valueChanged(int arg1)
-{
-    updateObjectColor();
-}
-
-void MainWindow::on_colorBValue_valueChanged(int arg1)
-{
-    updateObjectColor();
-}
-
-void MainWindow::on_lightPowerSlider_sliderMoved(int position)
-{
-    ui->widget->setLightPower(static_cast<float>(ui->lightPowerSlider->value()));
-}
-
-void MainWindow::on_shiningValue_valueChanged(int arg1)
-{
-    updateObjectColor();
 }
 
 void MainWindow::on_bRefreshCOMPort_clicked()
@@ -134,4 +70,19 @@ void MainWindow::on_bConnectCOMPort_clicked()
 void MainWindow::on_bStartRec_clicked()
 {
     ui->widget->startRecording();
+}
+
+void MainWindow::on_bStopRec_clicked()
+{
+    ui->widget->stopRecording();
+}
+
+void MainWindow::on_bStartReplay_clicked()
+{
+    ui->widget->startReplay();
+}
+
+void MainWindow::on_bStopReplay_clicked()
+{
+    ui->widget->stopReplay();
 }

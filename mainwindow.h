@@ -29,29 +29,19 @@ public:
 
         void on_pushButton_4_clicked();
 
-        void on_bLoad_clicked();
-
         void on_bMoveAround_clicked();
-
-        void on_objectListComboBox_highlighted(int index);
-
-        void on_colorRValue_valueChanged(int arg1);
-
-        void updateObjectColor();
-
-        void on_colorGValue_valueChanged(int arg1);
-
-        void on_colorBValue_valueChanged(int arg1);
-
-        void on_lightPowerSlider_sliderMoved(int position);
-
-        void on_shiningValue_valueChanged(int arg1);
 
         void on_bRefreshCOMPort_clicked();
 
         void on_bConnectCOMPort_clicked();
 
         void on_bStartRec_clicked();
+
+        void on_bStopRec_clicked();
+
+        void on_bStartReplay_clicked();
+
+        void on_bStopReplay_clicked();
 
 private:
 	Ui::MainWindow *ui;
