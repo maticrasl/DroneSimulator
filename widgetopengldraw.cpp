@@ -11,7 +11,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
-//#include <QtSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
 struct Vertice {
@@ -82,8 +81,6 @@ void WidgetOpenGLDraw::setLightPower(float p) {
 }
 
 void WidgetOpenGLDraw::keyPressEvent(QKeyEvent *event) {
-    //makeCurrent();
-
     float temp;
     glm::vec4 tocka;
     glm::mat4 V = glm::mat4(1);
@@ -173,7 +170,7 @@ void WidgetOpenGLDraw::keyPressEvent(QKeyEvent *event) {
         //}
         break;
 
-    // ROTACIJA PIRAMIDE
+    // ROTACIJA DRONA
     case Qt::Key_K:
         drone->rot[X] += 1.0f;
         break;
@@ -193,7 +190,7 @@ void WidgetOpenGLDraw::keyPressEvent(QKeyEvent *event) {
         drone->rot[Z] -= 1.0f;
         break;
 
-    // SKALIRANJE PIRAMIDE
+    // SKALIRANJE DRONA
     case Qt::Key_N:
         drone->scale[X] *= 0.9f;
         drone->scale[Y] *= 0.9f;
@@ -211,31 +208,31 @@ void WidgetOpenGLDraw::keyPressEvent(QKeyEvent *event) {
 
 void WidgetOpenGLDraw::generateFloor(glm::vec3 origin) {
     Object O;
-    O.vertices.push_back(glm::vec3(-0.5, -0.5, -0.5) + origin);  //levo
+    O.vertices.push_back(glm::vec3(-0.5, -0.5, -0.5) + origin); //levo
     O.vertices.push_back(glm::vec3(-0.5, -0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, -0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, 0.5) + origin);
-    O.vertices.push_back(glm::vec3(-0.5, -0.5, -0.5) + origin);  //Spredaj
+    O.vertices.push_back(glm::vec3(-0.5, -0.5, -0.5) + origin); //Spredaj
     O.vertices.push_back(glm::vec3(0.5, -0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, -0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, -0.5) + origin);
-    O.vertices.push_back(glm::vec3(0.5, -0.5, -0.5) + origin); //Desno
+    O.vertices.push_back(glm::vec3(0.5, -0.5, -0.5) + origin);  //Desno
     O.vertices.push_back(glm::vec3(0.5, -0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, -0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, 0.5) + origin);
-    O.vertices.push_back(glm::vec3(-0.5, -0.5, 0.5) + origin); //Zadaj
+    O.vertices.push_back(glm::vec3(-0.5, -0.5, 0.5) + origin);  //Zadaj
     O.vertices.push_back(glm::vec3(0.5, -0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, -0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(-0.5, 0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, 0.5) + origin);
-    O.vertices.push_back(glm::vec3(-0.5, 0.5, -0.5) + origin); //Top
+    O.vertices.push_back(glm::vec3(-0.5, 0.5, -0.5) + origin);  //Top
     O.vertices.push_back(glm::vec3(-0.5, 0.5, 0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, -0.5) + origin);
     O.vertices.push_back(glm::vec3(0.5, 0.5, -0.5) + origin);
@@ -250,7 +247,7 @@ void WidgetOpenGLDraw::generateFloor(glm::vec3 origin) {
 
     O.index = objectCount++;
     O.verticesStartingPosition = static_cast<unsigned int>(allVertices.size());
-    O.color = glm::vec4(0.0, 0.6, 0.1, 0.0);
+    O.color = glm::vec4(0.6, 0.9, 0.2, 0.0);
     for(unsigned int i = 0; i < static_cast<unsigned int>(O.vertices.size()); i++)
         allVertices.push_back(O.vertices[i]);
 
@@ -403,6 +400,7 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
             list = readString.split(" ",QString::SkipEmptyParts);
             for(i = 0; i < 8; i++)
                 value[i] = static_cast<uint16_t>(list[i].toUInt());
+
             if(value[7] > 1500 && infoMode == false) {
                 infoMode = true;
                 showPrediction();
@@ -415,6 +413,14 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
                 drone->parts[5].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
                 hidePrediction();
             }
+
+            if(value[6] < 700)
+                selectedCamera = DRONE_CAM;
+            else if(value[6] < 1200)
+                selectedCamera = LOOKAT_CAM;
+            else
+                selectedCamera = FREE_CAM;
+
             if(replaying == true)
                 replay();
             else {
@@ -481,13 +487,13 @@ void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
         drone->pos[Y] += (v[1] * t);
         drone->pos[Z] += (v[2] * t);
 
-    }
-    glm::vec4 rotorSpeed = glm::vec4(value[0], value[1], value[2], value[3]);
-    rotorSpeed = calculateRotorSpeed(rotorSpeed);
-    for(int i = 0; i < 4; i++) {
-        drone->parts[i + 2].rot[Y] = static_cast<uint16_t>(drone->parts[i + 2].rot[Y] + rotorSpeed[i] * 75.0f);
-        if(drone->parts[i + 2].rot[Y] > 360.0f)
-            drone->parts[i + 2].rot[Y] -= 360.0f;
+        glm::vec4 rotorSpeed = glm::vec4(value[0], value[1], value[2], value[3]);
+        rotorSpeed = calculateRotorSpeed(rotorSpeed);
+        for(int i = 0; i < 4; i++) {
+            drone->parts[i + 2].rot[Y] = static_cast<uint16_t>(drone->parts[i + 2].rot[Y] + rotorSpeed[i] * 75.0f);
+            if(drone->parts[i + 2].rot[Y] > 360.0f)
+                drone->parts[i + 2].rot[Y] -= 360.0f;
+        }
     }
 
     if(infoMode) {
@@ -499,7 +505,7 @@ void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
             vzuSize = glm::length(vTemp);
             vzu = -static_cast<float>(pow(vzuSize / vMax, 2)) * vTemp;
             vTemp += vzu;
-            prediction->parts[i].pos = vTemp * t * 2.0f * static_cast<float>(i + 1);
+            prediction->parts[i].pos = vTemp * t * 3.0f * static_cast<float>(i + 1);
             prediction->generateMs();
         }
     }
@@ -669,9 +675,9 @@ void WidgetOpenGLDraw::addDrone() {
 
 void WidgetOpenGLDraw::addHouse(glm::vec3 coords) {
     Group *H = new Group();
-    float scaleX = rand() % 3 + 5;
-    float scaleY = rand() % 3 + 5;
-    float scaleZ = rand() % 5 + 7;
+    float scaleX = rand() % 3 + 7;
+    float scaleY = rand() % 3 + 7;
+    float scaleZ = rand() % 5 + 9;
     addObject("Objects/kocka.obj");
     allObjects.back().color = glm::vec4(1.0f, 1.0f, 0.5f, 0.0f);
     H->addPart(allObjects.back());
@@ -679,7 +685,7 @@ void WidgetOpenGLDraw::addHouse(glm::vec3 coords) {
     allObjects.back().color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     allObjects.back().scale = glm::vec3(1.1f, 1.0f, 1.1f);
     H->addPart(allObjects.back());
-    H->pos = coords;
+    H->pos = coords + glm::vec3(rand() % 91 - 45, 0, rand() % 91 - 45);
     H->rot = glm::vec3(0.0f, rand() % 360, 0.0f);
     H->scale = glm::vec3(scaleX, scaleY, scaleZ);
     H->generateMs();
@@ -688,7 +694,41 @@ void WidgetOpenGLDraw::addHouse(glm::vec3 coords) {
 }
 
 void WidgetOpenGLDraw::addTree(glm::vec3 coords) {
+    uint8_t height = rand() % 10 + 6;
+    uint8_t krosnja = rand() % 3 + (height >> 2) + 2;
+    Group *tree = new Group();
+    addObject("Objects/deblo.obj");
+    allObjects.back().color = glm::vec4(0.6f, 0.23f, 0.0f, 0.0f);
+    allObjects.back().scale = glm::vec3(1.0f, height / 2, 1.0f);
+    tree->addPart(allObjects.back());
+    addObject("Objects/icosphere.obj");
+    allObjects.back().color = glm::vec4(0.0f, 0.4f, 0.0f, 0.0f);
+    allObjects.back().scale = glm::vec3(krosnja, krosnja, krosnja);
+    allObjects.back().pos = glm::vec3(0.0f, height, 0.0f);
+    tree->addPart(allObjects.back());
+    tree->pos = coords + glm::vec3(rand() % 41 - 20, 0, rand() % 41 - 20);
+    tree->rot = glm::vec3(0.0f, rand() % 360, 0.0f);
+    tree->generateMs();
 
+    allGroups.push_back(tree);
+}
+
+void WidgetOpenGLDraw::generateTerrain() {
+    // Od -500 do 500 = 10x10 tilov
+    uint8_t tileType;
+    for(int8_t i = -5; i < 5; i++) {
+        for(int8_t j = -5; j < 5; j++) {
+            tileType = rand() % 4;
+            if(tileType == 0)
+                addHouse(glm::vec3(i * 100 + 50, 0, j * 100 + 50));
+            else {
+                addTree(glm::vec3(i * 100 + 25, 0, j * 100 + 25));
+                addTree(glm::vec3(i * 100 + 25, 0, j * 100 + 75));
+                addTree(glm::vec3(i * 100 + 75, 0, j * 100 + 25));
+                addTree(glm::vec3(i * 100 + 75, 0, j * 100 + 75));
+            }
+        }
+    }
 }
 
 WidgetOpenGLDraw::WidgetOpenGLDraw(QWidget *parent) : QOpenGLWidget(parent) {
@@ -863,7 +903,7 @@ void WidgetOpenGLDraw::initializeGL() {
     gl->glGenVertexArrays(1, &allGroups.back()->parts.back().id_VAO_object);
     gl->glBindVertexArray(allGroups.back()->parts.back().id_VAO_object);
 
-    Light.pos = glm::vec3(0.0f, 300.0f, 0.0f);
+    Light.pos = glm::vec3(0.0f, 30.0f, 0.0f);
 
     //addObject("Objects/kocka.obj");
     //allObjects[0].pos[Y] = -1.0f;
@@ -888,7 +928,8 @@ void WidgetOpenGLDraw::initializeGL() {
     }
 
     addDrone();
-    addHouse(glm::vec3(10.0f, 0.0f, 10.0f));
+    //addHouse(glm::vec3(10.0f, 0.0f, 10.0f));
+    generateTerrain();
 
     selectedGroup = 1;
     //makeCurrent();
@@ -900,31 +941,17 @@ void WidgetOpenGLDraw::resizeGL(int w, int h) {
 
 void WidgetOpenGLDraw::paintGL() {
     // počisti ozadje in globinski pomnilnik (za testiranje globine)
-    gl->glClearColor(0.2f, 0.2f, 0.2f, 1);
+    gl->glClearColor(0.7f, 0.9f, 0.9f, 1);
     gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    Light.pos = glm::vec3(drone->pos[X], drone->pos[Y] + 30.0f, drone->pos[Z]);
 
     for(unsigned int i = 0; i < allGroups.size(); i++) {
         // projekcijska matrika
         glm::mat4 P;
 
-        /*if(projectionType == 1) {
-            float wh = float(double(width()) / double(height()));
-            P = glm::orthoLH((0.1f * FOV * wh) / (-2.0f), (0.1f * FOV * wh) / (2.0f), (0.1f * FOV) / (-2.0f), (0.1f * FOV) / 2.0f, 100.0f, -100.0f);
-        }
-        else*/
-
         P = glm::perspective(glm::radians(FOV), float(width()) / height(), 0.01f, 1000.0f);
 
-        // Matrika pogleda (view) (premikanje kamere...)
-        /*
-        glm::mat4 V = glm::mat4(1);
-        V = glm::rotate_slow(V, glm::radians(camRotX), glm::vec3(1, 0, 0));
-        V = glm::rotate_slow(V, glm::radians(camRotY), glm::vec3(0, 1, 0));
-        V = glm::rotate_slow(V, glm::radians(camRotZ), glm::vec3(0, 0, 1));
-        V = glm::translate(V, glm::vec3(camPosX, camPosY, camPosZ));
-        */
-
+        // Matrika pogleda (view)
         glm::mat4 V = glm::mat4(1);
 
         switch(selectedCamera) {
@@ -932,10 +959,9 @@ void WidgetOpenGLDraw::paintGL() {
             V = glm::lookAt(camera[LOOKAT_CAM].pos, glm::normalize(drone->pos - camera[LOOKAT_CAM].pos) + camera[LOOKAT_CAM].pos, glm::vec3(0.0f, 1.0f, 0.0f));
             break;
         case DRONE_CAM:
-            //V = glm::rotate_slow(V, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            V = glm::translate(V, glm::vec3(0.0f, -0.15f, -0.6f));                                  // 1
-            V = glm::rotate_slow(V, glm::radians(-drone->rot[Y]), glm::vec3(0.0f, 1.0f, 0.0f));     // 3
-            V = glm::translate(V, -drone->pos);                                                     // 2
+            V = glm::translate(V, glm::vec3(0.0f, -0.15f, -0.6f));
+            V = glm::rotate_slow(V, glm::radians(-drone->rot[Y]), glm::vec3(0.0f, 1.0f, 0.0f));
+            V = glm::translate(V, -drone->pos);
             break;
         case FREE_CAM:
             V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[X]), glm::vec3(1, 0, 0));
@@ -971,7 +997,7 @@ void WidgetOpenGLDraw::paintGL() {
 
     const unsigned int err = gl->glGetError();
     if (err != 0) {
-        std::cerr << "1OpenGL napaka: " << err << std::endl;
+        std::cerr << "penGL napaka: " << err << std::endl;
     }
 }
 

@@ -13,8 +13,8 @@ class Group;
 
 class Object {
 public:
-    unsigned int index;                              // Index of object created
-    unsigned int verticesStartingPosition;  // Starting position of object vertices in buffer
+    unsigned int index;                             // Index of object created
+    unsigned int verticesStartingPosition;          // Starting position of object vertices in buffer
     glm::vec4 color;
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> textures;
@@ -85,7 +85,7 @@ public:
     void addDrone();
     void addHouse(glm::vec3 coords);
     void addTree(glm::vec3 coords);
-
+    void generateTerrain();
 
 private:
     void PrevediSencilnike();
@@ -106,10 +106,8 @@ private:
     unsigned int selectedGroup = 0;
 
     std::vector<Object> camera;
-    int selectedCamera = 0;
-    float FOV = 60.0f;
-
-    //uint8_t projectionType = 0;     // 0 = perspektivna; 1 = paralelna; 2 = ortogonalna
+    int selectedCamera = DRONE_CAM;
+    float FOV = 70.0f;
 
     std::vector<glm::vec4> cubeColor;
     std::vector<glm::vec3> allVertices;
@@ -123,7 +121,7 @@ private:
     Object Light;
     glm::vec3 lightPos = glm::vec3(0.0f, 150.0f, 0.0f);
     glm::vec3 lightColor = glm::vec3(lightColor);
-    float lightPower = 500.0f;
+    float lightPower = 150.0f;
 
     QSerialPort serialPort;
 
