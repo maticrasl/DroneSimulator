@@ -32,33 +32,33 @@ unsigned int WidgetOpenGLDraw::getObjectCount() {
 }
 
 void WidgetOpenGLDraw::setSelectedObject(int index) {
-    selectedObject = static_cast<unsigned int>(index);
+    selectedGroup = static_cast<unsigned int>(index);
 }
 
 glm::vec3 WidgetOpenGLDraw::getObjectColor() {
     glm::vec3 c;
-    c[0] = allObjects[selectedObject].color[0];
-    c[1] = allObjects[selectedObject].color[1];
-    c[2] = allObjects[selectedObject].color[2];
+    c[0] = allObjects[selectedGroup].color[0];
+    c[1] = allObjects[selectedGroup].color[1];
+    c[2] = allObjects[selectedGroup].color[2];
     return c;
 }
 
 void WidgetOpenGLDraw::setObjectColor(glm::vec3 color) {
     makeCurrent();
-    allObjects[selectedObject].color[0] = color[0];
-    allObjects[selectedObject].color[1] = color[1];
-    allObjects[selectedObject].color[2] = color[2];
+    allObjects[selectedGroup].color[0] = color[0];
+    allObjects[selectedGroup].color[1] = color[1];
+    allObjects[selectedGroup].color[2] = color[2];
     update();
 }
 
 void WidgetOpenGLDraw::setObjectShining(int s) {
     makeCurrent();
-    allObjects[selectedObject].shining = s;
+    allObjects[selectedGroup].shining = s;
     update();
 }
 
 int WidgetOpenGLDraw::getObjectShining() {
-    return allObjects[selectedObject].shining;
+    return allObjects[selectedGroup].shining;
 }
 
 void WidgetOpenGLDraw::loadTexture(QString path) {
@@ -99,114 +99,117 @@ void WidgetOpenGLDraw::keyPressEvent(QKeyEvent *event) {
 
     // ROTACIJA KAMERE
     case Qt::Key_T:
-        camera[STATIC_CAM].rot[X] -= 1.0f;
+        camera[FREE_CAM].rot[X] -= 1.0f;
         break;
     case Qt::Key_G:
-        camera[STATIC_CAM].rot[X] += 1.0f;
+        camera[FREE_CAM].rot[X] += 1.0f;
         break;
     case Qt::Key_F:
-        camera[STATIC_CAM].rot[Y] -= 1.0f;
+        camera[FREE_CAM].rot[Y] -= 1.0f;
         break;
     case Qt::Key_H:
-        camera[STATIC_CAM].rot[Y] += 1.0f;
+        camera[FREE_CAM].rot[Y] += 1.0f;
         break;
 
     // PREMIK KAMERE PO SCENI
     case Qt::Key_W:
-        V = glm::rotate(V, glm::radians(-camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        V = glm::rotate(V, glm::radians(-camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
         V = glm::translate(V, glm::vec3(0, 0, 0.1f));
-        V = glm::rotate(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
-        tocka = V * glm::vec4(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z], 1);
-        camera[STATIC_CAM].pos[X] = tocka[0];
-        camera[STATIC_CAM].pos[Y] = tocka[1];
-        camera[STATIC_CAM].pos[Z] = tocka[2];
+        V = glm::rotate(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        tocka = V * glm::vec4(camera[FREE_CAM].pos[X], camera[FREE_CAM].pos[Y], camera[FREE_CAM].pos[Z], 1);
+        camera[FREE_CAM].pos[X] = tocka[0];
+        camera[FREE_CAM].pos[Y] = tocka[1];
+        camera[FREE_CAM].pos[Z] = tocka[2];
         break;
     case Qt::Key_S:
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, -1, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, -1, 0));
         V = glm::translate(V, glm::vec3(0, 0, -0.1f));
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
-        tocka = V * glm::vec4(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z], 1);
-        camera[STATIC_CAM].pos[X] = tocka[0];
-        camera[STATIC_CAM].pos[Y] = tocka[1];
-        camera[STATIC_CAM].pos[Z] = tocka[2];
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        tocka = V * glm::vec4(camera[FREE_CAM].pos[X], camera[FREE_CAM].pos[Y], camera[FREE_CAM].pos[Z], 1);
+        camera[FREE_CAM].pos[X] = tocka[0];
+        camera[FREE_CAM].pos[Y] = tocka[1];
+        camera[FREE_CAM].pos[Z] = tocka[2];
         break;
     case Qt::Key_A:
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, -1, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, -1, 0));
         V = glm::translate(V, glm::vec3(0.1f, 0.0f, 0.0f));
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
-        tocka = V * glm::vec4(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z], 1);
-        camera[STATIC_CAM].pos[X] = tocka[0];
-        camera[STATIC_CAM].pos[Y] = tocka[1];
-        camera[STATIC_CAM].pos[Z] = tocka[2];
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        tocka = V * glm::vec4(camera[FREE_CAM].pos[X], camera[FREE_CAM].pos[Y], camera[FREE_CAM].pos[Z], 1);
+        camera[FREE_CAM].pos[X] = tocka[0];
+        camera[FREE_CAM].pos[Y] = tocka[1];
+        camera[FREE_CAM].pos[Z] = tocka[2];
         break;
     case Qt::Key_D:
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, -1, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, -1, 0));
         V = glm::translate(V, glm::vec3(-0.1f, 0.0f, 0.0f));
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
-        tocka = V * glm::vec4(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z], 1);
-        camera[STATIC_CAM].pos[X] = tocka[0];
-        camera[STATIC_CAM].pos[Y] = tocka[1];
-        camera[STATIC_CAM].pos[Z] = tocka[2];
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        tocka = V * glm::vec4(camera[FREE_CAM].pos[X], camera[FREE_CAM].pos[Y], camera[FREE_CAM].pos[Z], 1);
+        camera[FREE_CAM].pos[X] = tocka[0];
+        camera[FREE_CAM].pos[Y] = tocka[1];
+        camera[FREE_CAM].pos[Z] = tocka[2];
         break;
     case Qt::Key_Q:
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, -1, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, -1, 0));
         V = glm::translate(V, glm::vec3(0.0f, 0.1f, 0.0f));
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
-        tocka = V * glm::vec4(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z], 1);
-        camera[STATIC_CAM].pos[X] = tocka[0];
-        camera[STATIC_CAM].pos[Y] = tocka[1];
-        camera[STATIC_CAM].pos[Z] = tocka[2];
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        tocka = V * glm::vec4(camera[FREE_CAM].pos[X], camera[FREE_CAM].pos[Y], camera[FREE_CAM].pos[Z], 1);
+        camera[FREE_CAM].pos[X] = tocka[0];
+        camera[FREE_CAM].pos[Y] = tocka[1];
+        camera[FREE_CAM].pos[Z] = tocka[2];
         break;
     case Qt::Key_E:
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, -1, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, -1, 0));
         V = glm::translate(V, glm::vec3(0.0f, -0.1f, 0.0f));
-        V = glm::rotate_slow(V, glm::radians(camera[STATIC_CAM].rot[Y]), glm::vec3(0, 1, 0));
-        tocka = V * glm::vec4(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z], 1);
-        camera[STATIC_CAM].pos[X] = tocka[0];
-        camera[STATIC_CAM].pos[Y] = tocka[1];
-        camera[STATIC_CAM].pos[Z] = tocka[2];
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        tocka = V * glm::vec4(camera[FREE_CAM].pos[X], camera[FREE_CAM].pos[Y], camera[FREE_CAM].pos[Z], 1);
+        camera[FREE_CAM].pos[X] = tocka[0];
+        camera[FREE_CAM].pos[Y] = tocka[1];
+        camera[FREE_CAM].pos[Z] = tocka[2];
         break;
     case Qt::Key_C:
         selectedCamera = ++selectedCamera % camera.size();
+        //if(selectedCamera == FREE_CAM) {
+        //    camera[FREE_CAM].rot = camera[LOOKAT_CAM].rot;
+        //}
         break;
 
     // ROTACIJA PIRAMIDE
     case Qt::Key_K:
-        allObjects[selectedObject].rot[X] += 1.0f;
+        drone->rot[X] += 1.0f;
         break;
     case Qt::Key_I:
-        allObjects[selectedObject].rot[X] -= 1.0f;
+        drone->rot[X] -= 1.0f;
         break;
     case Qt::Key_L:
-        allObjects[selectedObject].rot[Y] += 1.0f;
+        drone->rot[Y] += 1.0f;
         break;
     case Qt::Key_J:
-        allObjects[selectedObject].rot[Y] -= 1.0f;
+        drone->rot[Y] -= 1.0f;
         break;
     case Qt::Key_U:
-        allObjects[selectedObject].rot[Z] += 1.0f;
+        drone->rot[Z] += 1.0f;
         break;
     case Qt::Key_O:
-        allObjects[selectedObject].rot[Z] -= 1.0f;
+        drone->rot[Z] -= 1.0f;
         break;
 
     // SKALIRANJE PIRAMIDE
     case Qt::Key_N:
-        allObjects[selectedObject].scale[X] *= 0.9f;
-        allObjects[selectedObject].scale[Y] *= 0.9f;
-        allObjects[selectedObject].scale[Z] *= 0.9f;
+        drone->scale[X] *= 0.9f;
+        drone->scale[Y] *= 0.9f;
+        drone->scale[Z] *= 0.9f;
         break;
     case Qt::Key_M:
-        allObjects[selectedObject].scale[X] /= 0.9f;
-        allObjects[selectedObject].scale[Y] /= 0.9f;
-        allObjects[selectedObject].scale[Z] /= 0.9f;
+        drone->scale[X] /= 0.9f;
+        drone->scale[Y] /= 0.9f;
+        drone->scale[Z] /= 0.9f;
         break;
     }
-
+    drone->generateMs();
     update();
 }
 
-void WidgetOpenGLDraw::generateCube(glm::vec3 origin) {
+void WidgetOpenGLDraw::generateFloor(glm::vec3 origin) {
     Object O;
     O.vertices.push_back(glm::vec3(-0.5, -0.5, -0.5) + origin);  //levo
     O.vertices.push_back(glm::vec3(-0.5, -0.5, 0.5) + origin);
@@ -251,13 +254,12 @@ void WidgetOpenGLDraw::generateCube(glm::vec3 origin) {
     for(unsigned int i = 0; i < static_cast<unsigned int>(O.vertices.size()); i++)
         allVertices.push_back(O.vertices[i]);
 
+    O.scale = glm::vec3(20.0f, 1.0f, 20.0f);
     allObjects.push_back(O);
     //loadTexture("C:/Faks/RG/Vaja5/b.jpg");
 }
 
 void WidgetOpenGLDraw::loadObjFile(QString fileName) {
-    //QString fileName = QFileDialog::getOpenFileName(nullptr, "Select .obj File", "", "Object File (*.obj);;All Files(*)");
-    //QString fileName = "F:/Faks/RG/build-RG_Template-Desktop_Qt_5_12_5_MinGW_64_bit-Debug/vaja2_icoSphere.obj";
     QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly)) {
         QMessageBox::information(nullptr, "Unable to open file", file.errorString());
@@ -322,7 +324,7 @@ void WidgetOpenGLDraw::loadObjFile(QString fileName) {
     file.close();
     O.index = objectCount++;
     O.verticesStartingPosition = static_cast<unsigned int>(allVertices.size()) * sizeof(glm::vec3);
-    O.color = glm::vec4((float(rand() % 8) / 8), (float(rand() % 8) / 8), (float(rand() % 8) / 8), 0);
+    O.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
     for(unsigned int i = 0; i < O.vertices.size(); i++) {
         allVertices.push_back(O.vertices[i]);
         allNormals.push_back(O.normals[i]);
@@ -333,11 +335,9 @@ void WidgetOpenGLDraw::loadObjFile(QString fileName) {
 void WidgetOpenGLDraw::addObject(QString fileName) {
     makeCurrent();
     loadObjFile(fileName);
-    GLint b;
-    id_VAO_object.push_back(b);
 
-    gl->glGenVertexArrays(1, &id_VAO_object.back());
-    gl->glBindVertexArray(id_VAO_object.back());
+    gl->glGenVertexArrays(1, &allObjects.back().id_VAO_object);
+    gl->glBindVertexArray(allObjects.back().id_VAO_object);
 
     unsigned int a;
     id_buffer_object.push_back(a);
@@ -410,22 +410,27 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
                 calculateForces(value);
             }
         }
+        drone->generateMs();
+
         update();
         QCoreApplication::processEvents();
     }
 }
 
 void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
+    //glm::vec4 rotorSpeed;
     if(value[4] > 1100) {       // Če je drone arman
         T = (value[2] - 599) / 1002.0f;
+        //rotorSpeed = glm::vec4(T, T, T, T);
+        //rotorSpeed += glm::vec4()
         fm = T * Tfull;
-        addRot = (value[3] - 1100) / 50.0f;
-        rot = rot + addRot;
+        addRot = (value[3] - 1100) / 80.0f;
+        rot = rot - addRot;
         if(rot >= 360.0f)
             rot -= 360.0f;
         if(rot < 0.0f)
             rot += 360.0f;
-        angle = glm::vec3(static_cast<float>(value[1] - 1100) / -10.0f, rot, static_cast<float>(value[0] - 1100) / -10.0f);
+        angle = glm::vec3(static_cast<float>(value[1] - 1100) / -15.0f, rot, static_cast<float>(value[0] - 1100) / -15.0f);
 
         norm = glm::vec3(0.0, 1.0, 0.0);
         glm::mat4 rotM = glm::mat4(1);
@@ -444,9 +449,10 @@ void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
         vzu = -static_cast<float>(pow(vzuSize / vMax, 2)) * v;
         v += vzu;
         if(drone->pos[Y] <= 0 && v[1] < 0) {
+            drone->pos[Y] = 0;
             v = glm::vec3(0.0, 0.0, 0.0);
             drone->rot[X] = 0.0f;
-            rot = rot - addRot;
+            rot = rot + addRot;
             if(rot > 360.0f)
                 rot -= 360.0f;
             if(rot < 0.0f)
@@ -463,6 +469,7 @@ void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
         drone->pos[X] += (v[0] * t);
         drone->pos[Y] += (v[1] * t);
         drone->pos[Z] += (v[2] * t);
+
     }
 }
 
@@ -498,11 +505,99 @@ void WidgetOpenGLDraw::replay() {
 
 }
 
+void Object::generateM() {
+    M = glm::mat4(1);
+
+    //glm::mat4 scaleM = glm::mat4(glm::vec4(this->parent->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+    //M = glm::scale(scaleM, this->parent->scale);
+    M = glm::translate(M, this->parent->pos);
+    glm::mat4 scaleM = glm::mat4(glm::vec4(this->parent->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, this->parent->scale[Y], 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, this->parent->scale[Z], 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    M = M * scaleM;
+    M = glm::rotate_slow(M, glm::radians(this->parent->rot[Y]), glm::vec3(0, 1, 0));
+    M = glm::rotate_slow(M, glm::radians(this->parent->rot[X]), glm::vec3(1, 0, 0));
+    M = glm::rotate_slow(M, glm::radians(this->parent->rot[Z]), glm::vec3(0, 0, 1));
+
+    M = glm::translate(M, this->pos);
+    M = glm::rotate_slow(M, glm::radians(this->rot[Y]), glm::vec3(0, 1, 0));
+    M = glm::rotate_slow(M, glm::radians(this->rot[X]), glm::vec3(1, 0, 0));
+    M = glm::rotate_slow(M, glm::radians(this->rot[Z]), glm::vec3(0, 0, 1));
+    scaleM = glm::mat4(glm::vec4(this->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, this->scale[Y], 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, this->scale[Z], 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    M = M * scaleM;
+}
+
+void Group::generateMs() {
+    for(unsigned int i = 0; i < this->parts.size(); i++) {
+        this->parts[i].generateM();
+    }
+}
+
+void Group::addPart(Object o) {
+    o.parent = this;
+    this->parts.push_back(o);
+    this->parts.back().generateM();
+}
+
+void WidgetOpenGLDraw::addDrone() {
+    Group *g = new Group();
+    g->rot = glm::vec3(0.0f, 180.0f, 0.0f);
+
+    addObject("Objects/drone.obj");
+    g->addPart(allObjects.back());
+    addObject("Objects/DronePCB.obj");
+    g->addPart(allObjects.back());
+    addObject("Objects/Propeller.obj");
+    g->addPart(allObjects.back());
+    g->parts.back().pos = glm::vec3(0.084944f, 0.031319f, 0.086413f);   // BL
+    addObject("Objects/Propeller.obj");
+    g->addPart(allObjects.back());
+    g->parts.back().pos = glm::vec3(-0.084944f, 0.031319f, 0.086413f);  // BR
+    addObject("Objects/Propeller.obj");
+    g->addPart(allObjects.back());
+    g->parts.back().pos = glm::vec3(0.084944f, 0.031319f, -0.086413f);  // FL
+    addObject("Objects/Propeller.obj");
+    g->addPart(allObjects.back());
+    g->parts.back().pos = glm::vec3(-0.084944f, 0.031319f, -0.086413f); // FR
+
+    g->parts[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
+    g->parts[1].color = glm::vec4(0.0f, 0.5f, 0.0f, 0.0f);
+    g->parts[2].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    g->parts[3].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    g->parts[4].color = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    g->parts[5].color = glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
+    allGroups.push_back(g);
+
+    drone = g;
+}
+
+void WidgetOpenGLDraw::addHouse(glm::vec3 coords) {
+    Group *H = new Group();
+    float scaleX = rand() % 3 + 5;
+    float scaleY = rand() % 3 + 5;
+    float scaleZ = rand() % 5 + 7;
+    addObject("Objects/kocka.obj");
+    allObjects.back().color = glm::vec4(1.0f, 1.0f, 0.5f, 0.0f);
+    H->addPart(allObjects.back());
+    addObject("Objects/streha.obj");
+    allObjects.back().color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    H->addPart(allObjects.back());
+    H->pos = coords;
+    H->rot = glm::vec3(0.0f, rand() % 360, 0.0f);
+    H->scale = glm::vec3(scaleX, scaleY, scaleZ);
+    H->generateMs();
+
+    allGroups.push_back(H);
+}
+
+void WidgetOpenGLDraw::addTree(glm::vec3 coords) {
+
+}
+
 WidgetOpenGLDraw::WidgetOpenGLDraw(QWidget *parent) : QOpenGLWidget(parent) {
     Object c1, c2, c3;
-    c1.pos = glm::vec3(0.0f, 2.0f, -15.0f);
-    c2.pos = glm::vec3(0.0f, 2.0f, -15.0f);
-    c3.pos = glm::vec3(0.0f, 2.0f, -15.0f);
+    c1.pos = glm::vec3(0.0f, 2.0f, -5.0f);
+    c2.pos = glm::vec3(0.0f, -2.0f, -5.0f);
+    c3.pos = glm::vec3(0.0f, -2.0f, -5.0f);
     c1.rot = glm::vec3(0.0f, 0.0f, 0.0f);
     c2.rot = glm::vec3(0.0f, 0.0f, 0.0f);
     c3.rot = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -524,8 +619,12 @@ WidgetOpenGLDraw::WidgetOpenGLDraw(QWidget *parent) : QOpenGLWidget(parent) {
 
 WidgetOpenGLDraw::~WidgetOpenGLDraw() {
     //počisti stanje
-    for(unsigned int i = 0; i < id_VAO_object.size(); i++)
-        gl->glDeleteVertexArrays(1,&id_VAO_object[i]);
+    for(unsigned int i = 0; i < allGroups.size(); i++) {
+        for(unsigned int j = 0; j < allGroups[i]->parts.size(); j++) {
+            gl->glDeleteVertexArrays(1, &allGroups[i]->parts[j].id_VAO_object);
+        }
+        delete allGroups[i];
+    }
     gl->glDeleteProgram(id_sencilni_program);
 }
 
@@ -657,20 +756,26 @@ void WidgetOpenGLDraw::initializeGL() {
 
     glEnable(GL_DEPTH_TEST);
 
-    GLuint b;
-    id_VAO_object.push_back(b);
+    generateFloor(glm::vec3(0, -0.5f, 0));        // Tla
 
-    gl->glGenVertexArrays(1, &id_VAO_object.back());
-    gl->glBindVertexArray(id_VAO_object.back());
+    Group *g = new Group();
+    g->addPart(allObjects[0]);
+    allGroups.push_back(g);
 
-    Light.pos[Y] = 15.0f;
+    gl->glGenVertexArrays(1, &allGroups.back()->parts.back().id_VAO_object);
+    gl->glBindVertexArray(allGroups.back()->parts.back().id_VAO_object);
 
-    generateCube(glm::vec3(0, -0.5f, 0));        // Tla
+    Light.pos = glm::vec3(0.0f, 300.0f, 0.0f);
+
+    //addObject("Objects/kocka.obj");
+    //allObjects[0].pos[Y] = -1.0f;
+    //allObjects[0].scale = glm::vec3(20.0f, 1.0f, 20.0f);
     //loadObjFile(" F:/Faks/RG/build-RG_Template-Desktop_Qt_5_12_5_MinGW_64_bit-Debug/vaja2_mon.obj");
     //              F:/Faks/RG/RG_Template/RG_Template_texture/a.jpg
+
+
     unsigned int a;
     id_buffer_object.push_back(a);
-
     gl->glGenBuffers(1, &id_buffer_object[0]);
     gl->glBindBuffer(GL_ARRAY_BUFFER, id_buffer_object[0]);
     gl->glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * static_cast<unsigned int>(allVertices.size()), &allVertices[0], GL_STATIC_DRAW);
@@ -684,8 +789,10 @@ void WidgetOpenGLDraw::initializeGL() {
         std::cerr << "OpenGL init napaka: " << err << std::endl;
     }
 
-    addObject("Objects/vaja2_mon.obj");
-    drone = &allObjects[1];
+    addDrone();
+    addHouse(glm::vec3(10.0f, 0.0f, 10.0f));
+
+    selectedGroup = 1;
     //makeCurrent();
 }
 
@@ -699,9 +806,7 @@ void WidgetOpenGLDraw::paintGL() {
     gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    for(unsigned int i = 0; i < allObjects.size(); i++) {
-        gl->glBindVertexArray(id_VAO_object[i]);
-        gl->glUseProgram(id_sencilni_program);
+    for(unsigned int i = 0; i < allGroups.size(); i++) {
         // projekcijska matrika
         glm::mat4 P;
 
@@ -721,50 +826,47 @@ void WidgetOpenGLDraw::paintGL() {
         V = glm::rotate_slow(V, glm::radians(camRotZ), glm::vec3(0, 0, 1));
         V = glm::translate(V, glm::vec3(camPosX, camPosY, camPosZ));
         */
-        lookAtDrone = glm::normalize(glm::vec3(drone->pos[X], drone->pos[Y], drone->pos[Z]) - glm::vec3(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z]));
-        glm::vec3 upVector = glm::vec3(0, 1, 0);
 
-        glm::mat4 V = glm::translate(V, glm::vec3(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z]));
-        V = glm::lookAt(glm::vec3(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z]), lookAtDrone + glm::vec3(camera[STATIC_CAM].pos[X], camera[STATIC_CAM].pos[Y], camera[STATIC_CAM].pos[Z]), upVector);
+        glm::mat4 V = glm::mat4(1);
 
-
-        glm::mat4 M = glm::mat4(1);  // model matrix: premikanje objektov
-
-        glm::mat4 scale;
-
-        if(i == 0) {
-            M = glm::translate(M, glm::vec3(0, 0, 0));
-            scale = glm::mat4(glm::vec4(20.0f, 0.0f, 0.0f, 0.0f),
-                              glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
-                              glm::vec4(0.0f, 0.0f, 20.0f, 0.0f),
-                              glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        switch(selectedCamera) {
+        case LOOKAT_CAM:
+            V = glm::lookAt(camera[LOOKAT_CAM].pos, glm::normalize(drone->pos - camera[LOOKAT_CAM].pos) + camera[LOOKAT_CAM].pos, glm::vec3(0.0f, 1.0f, 0.0f));
+            break;
+        case DRONE_CAM:
+            //V = glm::rotate_slow(V, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            V = glm::translate(V, glm::vec3(0.0f, -0.15f, -0.6f));                                  // 1
+            V = glm::rotate_slow(V, glm::radians(-drone->rot[Y]), glm::vec3(0.0f, 1.0f, 0.0f));     // 3
+            V = glm::translate(V, -drone->pos);                                                     // 2
+            break;
+        case FREE_CAM:
+            V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[X]), glm::vec3(1, 0, 0));
+            V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+            V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Z]), glm::vec3(0, 0, 1));
+            V = glm::translate(V, camera[FREE_CAM].pos);
+            break;
         }
-        else {
-            M = glm::translate(M, glm::vec3(allObjects[i].pos[X], allObjects[i].pos[Y], allObjects[i].pos[Z]));
-            M = glm::rotate_slow(M, glm::radians(allObjects[i].rot[Y]), glm::vec3(0, 1, 0));
-            M = glm::rotate_slow(M, glm::radians(allObjects[i].rot[X]), glm::vec3(1, 0, 0));
-            M = glm::rotate_slow(M, glm::radians(allObjects[i].rot[Z]), glm::vec3(0, 0, 1));
-            scale = glm::mat4(glm::vec4(allObjects[i].scale[X], 0.0f, 0.0f, 0.0f),
-                              glm::vec4(0.0f, allObjects[i].scale[Y], 0.0f, 0.0f),
-                              glm::vec4(0.0f, 0.0f, allObjects[i].scale[Z], 0.0f),
-                              glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        for(unsigned int j = 0; j < allGroups[i]->parts.size(); j++) {
+            gl->glBindVertexArray(allGroups[i]->parts[j].id_VAO_object);
+            gl->glUseProgram(id_sencilni_program);
+
+            glm::mat4 PVM = P * V * allGroups[i]->parts[j].M;
+
+            gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "PVM"), 1, GL_FALSE, glm::value_ptr(PVM));
+            gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "M"), 1, GL_FALSE, glm::value_ptr(allGroups[i]->parts[j].M));
+            gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "V"), 1, GL_FALSE, glm::value_ptr(V));
+
+            //gl->glActiveTexture(GL_TEXTURE0);
+            //gl->glBindTexture(GL_TEXTURE_2D, allObjects[i].textureID);
+            //gl->glUniform1i(gl->glGetUniformLocation(id_sencilni_program, "myTextureSampler"), 0);
+            gl->glUniform4f(gl->glGetUniformLocation(id_sencilni_program, "DodajBarvo"), allGroups[i]->parts[j].color[0], allGroups[i]->parts[j].color[1], allGroups[i]->parts[j].color[2], allGroups[i]->parts[j].color[3]);
+            gl->glUniform3f(gl->glGetUniformLocation(id_sencilni_program, "LightPosition_worldspace"), Light.pos[X], Light.pos[Y], Light.pos[Z]);
+            gl->glUniform1i(gl->glGetUniformLocation(id_sencilni_program, "shining"), allGroups[i]->parts[j].shining);
+            gl->glUniform1f(gl->glGetUniformLocation(id_sencilni_program, "lightPower"), lightPower);
+            //gl->glDrawArrays(GL_TRIANGLES, static_cast<int>(allObjects[i].verticesStartingPosition), static_cast<int>(allObjects[i].vertices.size()));
+            gl->glDrawArrays(GL_TRIANGLES, 0, static_cast<int>(allGroups[i]->parts[j].vertices.size()));
         }
-        glm::mat4 PVM = P * V * M;
-        PVM *= scale;
-
-        gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "PVM"), 1, GL_FALSE, glm::value_ptr(PVM));
-        gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "M"), 1, GL_FALSE, glm::value_ptr(M));
-        gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "V"), 1, GL_FALSE, glm::value_ptr(V));
-
-        //gl->glActiveTexture(GL_TEXTURE0);
-        //gl->glBindTexture(GL_TEXTURE_2D, allObjects[i].textureID);
-        //gl->glUniform1i(gl->glGetUniformLocation(id_sencilni_program, "myTextureSampler"), 0);
-        gl->glUniform4f(gl->glGetUniformLocation(id_sencilni_program, "DodajBarvo"), allObjects[i].color[0], allObjects[i].color[1], allObjects[i].color[2], allObjects[i].color[3]);
-        gl->glUniform3f(gl->glGetUniformLocation(id_sencilni_program, "LightPosition_worldspace"), Light.pos[X], Light.pos[Y], Light.pos[Z]);
-        gl->glUniform1i(gl->glGetUniformLocation(id_sencilni_program, "shining"), allObjects[i].shining);
-        gl->glUniform1f(gl->glGetUniformLocation(id_sencilni_program, "lightPower"), lightPower);
-        //gl->glDrawArrays(GL_TRIANGLES, static_cast<int>(allObjects[i].verticesStartingPosition), static_cast<int>(allObjects[i].vertices.size()));
-        gl->glDrawArrays(GL_TRIANGLES, 0, static_cast<int>(allObjects[i].vertices.size()));
     }
 
     const unsigned int err = gl->glGetError();
@@ -776,35 +878,41 @@ void WidgetOpenGLDraw::paintGL() {
 void WidgetOpenGLDraw::MoveObjXPlus() {
     makeCurrent();
     drone->pos[X] += 0.2f;
+    drone->generateMs();
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjXMinus() {
     makeCurrent();
     drone->pos[X] -= 0.2f;
+    drone->generateMs();
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjYPlus() {
     makeCurrent();
     drone->pos[Y] += 0.2f;
+    drone->generateMs();
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjYMinus() {
     makeCurrent();
     drone->pos[Y] -= 0.2f;
+    drone->generateMs();
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjZPlus() {
     makeCurrent();
     drone->pos[Z] += 0.2f;
+    drone->generateMs();
     update();
 }
 
 void WidgetOpenGLDraw::MoveObjZMinus() {
     makeCurrent();
     drone->pos[Z] -= 0.2f;
+    drone->generateMs();
     update();
 }

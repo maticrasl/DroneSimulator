@@ -7,9 +7,12 @@
 #include <QtSerialPort>
 
 enum Coordinate {X, Y, Z};
-enum CAM {STATIC_CAM, DRONE_CAM, FREE_CAM};
+enum CAM {LOOKAT_CAM, DRONE_CAM, FREE_CAM};
 
-struct Object {
+class Group;
+
+class Object {
+public:
     unsigned int index;                              // Index of object created
     unsigned int verticesStartingPosition;  // Starting position of object vertices in buffer
     glm::vec4 color;
@@ -18,10 +21,27 @@ struct Object {
     std::vector<glm::vec3> normals;
 
     glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
     int shining = 5;
     unsigned int textureID;
+    glm::mat4 M;
+    Group* parent;
+    GLuint id_VAO_object;
+
+    bool visible = true;
+
+    void generateM();
+};
+
+class Group {
+public:
+    std::vector<Object> parts;
+    glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    void generateMs();
+    void addPart(Object o);
 };
 
 class QOpenGLFunctions_3_3_Core;
@@ -58,13 +78,17 @@ public:
     void record(uint16_t value[]);
     void replay();
 
+    void addDrone();
+    void addHouse(glm::vec3 coords);
+    void addTree(glm::vec3 coords);
+
 
 private:
     void PrevediSencilnike();
     void printProgramInfoLog(GLuint obj);
     void printShaderInfoLog(GLuint obj);
 
-    void generateCube(glm::vec3 izhodisce);
+    void generateFloor(glm::vec3 izhodisce);
     void loadObjFile(QString fileName);
 
     QOpenGLFunctions_3_3_Core* gl;
@@ -75,13 +99,11 @@ private:
     std::vector<GLuint> id_VAO_object;
 
     unsigned int objectCount = 0;
-    unsigned int selectedObject = 0;
+    unsigned int selectedGroup = 0;
 
     std::vector<Object> camera;
     int selectedCamera = 0;
     float FOV = 60.0f;
-
-    glm::vec3 lookAtDrone = glm::vec3(0, 0, 0);
 
     //uint8_t projectionType = 0;     // 0 = perspektivna; 1 = paralelna; 2 = ortogonalna
 
@@ -89,8 +111,9 @@ private:
     std::vector<glm::vec3> allVertices;
     std::vector<glm::vec3> allNormals;
     std::vector<Object> allObjects;
+    std::vector<Group*> allGroups;
 
-    Object* drone;
+    Group* drone;
 
     Object Light;
     glm::vec3 lightPos = glm::vec3(0.0f, 15.0f, 0.0f);
@@ -101,7 +124,7 @@ private:
 
     // Variables, used for simulation
     const float vMax = 150.0f;   // Maksimalna hitrost (m/s)
-    const float Tfull = 10.0f;  // Maksimalna moč motorjev (N)
+    const float Tfull = 8.0f;  // Maksimalna moč motorjev (N)
     const float m = 0.4f;       // Masa drona (kg)
     const float g = 9.81f;      // Grafitacijski pospešek (m/s^2)
     const glm::vec3 fg = glm::vec3(0, -3.924, 0);   // Sila gravitacije (N)
@@ -110,7 +133,7 @@ private:
     float T;                    // Trenutni pogon (N)
     float fm;                   // Sila motorjev (N)
     float addRot;               // Dodatna rotacija (stopinje)
-    float rot = 0;              // Rotacija drona (stopinje)
+    float rot = 180.0f;         // Rotacija drona (stopinje)
     float vzuSize;              // Trenutna hitrost (m/s)
     glm::vec3 angle;            // Nagib (rotacija) po vseh treh oseh (stopinje)
     glm::vec3 norm;             // Normala drona
