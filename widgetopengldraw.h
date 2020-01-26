@@ -70,6 +70,7 @@ public:
     void openSerialPort(QString s);
     void infiniteReadSerial();
     void calculateForces(uint16_t value[]);
+    glm::vec4 calculateRotorSpeed(glm::vec4 value);
 
     void startRecording();
     void stopRecording();
@@ -77,6 +78,9 @@ public:
     void stopReplay();
     void record(uint16_t value[]);
     void replay();
+    void initPrediction();
+    void hidePrediction();
+    void showPrediction();
 
     void addDrone();
     void addHouse(glm::vec3 coords);
@@ -114,11 +118,12 @@ private:
     std::vector<Group*> allGroups;
 
     Group* drone;
+    Group* prediction;
 
     Object Light;
-    glm::vec3 lightPos = glm::vec3(0.0f, 15.0f, 0.0f);
+    glm::vec3 lightPos = glm::vec3(0.0f, 150.0f, 0.0f);
     glm::vec3 lightColor = glm::vec3(lightColor);
-    float lightPower = 150.0f;
+    float lightPower = 500.0f;
 
     QSerialPort serialPort;
 
@@ -146,6 +151,8 @@ private:
 
     bool recording = false;
     bool replaying = false;
+    bool infoMode = false;
+
 
 protected:
 

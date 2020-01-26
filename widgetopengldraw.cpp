@@ -250,11 +250,11 @@ void WidgetOpenGLDraw::generateFloor(glm::vec3 origin) {
 
     O.index = objectCount++;
     O.verticesStartingPosition = static_cast<unsigned int>(allVertices.size());
-    O.color = glm::vec4(0.0, 1.0, 0.1, 0.0);
+    O.color = glm::vec4(0.0, 0.6, 0.1, 0.0);
     for(unsigned int i = 0; i < static_cast<unsigned int>(O.vertices.size()); i++)
         allVertices.push_back(O.vertices[i]);
 
-    O.scale = glm::vec3(20.0f, 1.0f, 20.0f);
+    O.scale = glm::vec3(1000.0f, 1.0f, 1000.0f);
     allObjects.push_back(O);
     //loadTexture("C:/Faks/RG/Vaja5/b.jpg");
 }
@@ -394,6 +394,7 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
     QStringList list;
     uint16_t value[8];
     uint8_t i;
+    initPrediction();
     while(1) {
         //makeCurrent();
         if(serialPort.waitForReadyRead(1)) {
@@ -402,6 +403,18 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
             list = readString.split(" ",QString::SkipEmptyParts);
             for(i = 0; i < 8; i++)
                 value[i] = static_cast<uint16_t>(list[i].toUInt());
+            if(value[7] > 1500 && infoMode == false) {
+                infoMode = true;
+                showPrediction();
+            }
+            else if(value[7] < 700 && infoMode == true) {
+                infoMode = false;
+                drone->parts[2].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+                drone->parts[3].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+                drone->parts[4].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+                drone->parts[5].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+                hidePrediction();
+            }
             if(replaying == true)
                 replay();
             else {
@@ -421,8 +434,6 @@ void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
     //glm::vec4 rotorSpeed;
     if(value[4] > 1100) {       // Če je drone arman
         T = (value[2] - 599) / 1002.0f;
-        //rotorSpeed = glm::vec4(T, T, T, T);
-        //rotorSpeed += glm::vec4()
         fm = T * Tfull;
         addRot = (value[3] - 1100) / 80.0f;
         rot = rot - addRot;
@@ -471,6 +482,69 @@ void WidgetOpenGLDraw::calculateForces(uint16_t value[]) {
         drone->pos[Z] += (v[2] * t);
 
     }
+    glm::vec4 rotorSpeed = glm::vec4(value[0], value[1], value[2], value[3]);
+    rotorSpeed = calculateRotorSpeed(rotorSpeed);
+    for(int i = 0; i < 4; i++) {
+        drone->parts[i + 2].rot[Y] = static_cast<uint16_t>(drone->parts[i + 2].rot[Y] + rotorSpeed[i] * 75.0f);
+        if(drone->parts[i + 2].rot[Y] > 360.0f)
+            drone->parts[i + 2].rot[Y] -= 360.0f;
+    }
+
+    if(infoMode) {
+        //prediction->rot = drone->rot;
+        prediction->pos = drone->pos;
+        glm::vec3 vTemp;
+        for(uint8_t i = 0; i < 10; i++) {
+            vTemp = v + a * t * static_cast<float>(i);
+            vzuSize = glm::length(vTemp);
+            vzu = -static_cast<float>(pow(vzuSize / vMax, 2)) * vTemp;
+            vTemp += vzu;
+            prediction->parts[i].pos = vTemp * t * 2.0f * static_cast<float>(i + 1);
+            prediction->generateMs();
+        }
+    }
+}
+
+glm::vec4 WidgetOpenGLDraw::calculateRotorSpeed(glm::vec4 value) {
+    float x, y, z, T;
+    T = (value[2] - 599) / 1002.0f;
+    x = (value[1] - 1100) / 1503;       // Nagib naprej - nazaj (max 1/3)
+    z = (value[3] - 1100) / 1503;       // Nagib levo - desno (max 1/3)
+    y = (value[0] - 1100) / 1503;       // Obrat levo - desno (max 1/3)
+    glm::vec4 rotorSpeed = glm::vec4(T, T, T, T);
+    rotorSpeed += (x >= 0) ? glm::vec4(0.0f, 0.0f, x, x) : glm::vec4(-x, -x, 0.0f, 0.0f);       // Nagib naprej - nazaj
+    rotorSpeed += (z >= 0) ? glm::vec4(z, 0.0f, 0.0f, z) : glm::vec4(0.0f, -z, -z, 0.0f);       // Nagib levo - desno
+    rotorSpeed += (y >= 0) ? glm::vec4(0.0f, y, 0.0f, y) : glm::vec4(-y, 0.0f, -y, 0.0f);       // Obrat levo - desno
+
+    float max = rotorSpeed[0];
+    if(rotorSpeed[1] > max)
+        max = rotorSpeed[1];
+    if(rotorSpeed[2] > max)
+        max = rotorSpeed[2];
+    if(rotorSpeed[3] > max)
+        max = rotorSpeed[3];
+    if(max > 1.0f)
+        rotorSpeed /= max;
+    if(max < 0.02f)
+        rotorSpeed = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    float temp;
+    if(infoMode) {
+        for(uint8_t i = 0; i < 4; i++) {
+            if(rotorSpeed[i] <= 0.33333f) {
+                temp = rotorSpeed[i] * 3.0f;
+                drone->parts[2 + i].color = glm::vec4(0.0f, temp, 1.0f - temp, 0.0f);
+            }
+            else if(rotorSpeed[i] <= 0.66667f) {
+                temp = (rotorSpeed[i] - 0.33333f) * 3.0f;
+                drone->parts[2 + i].color = glm::vec4(temp, 1.0f, 0.0f, 0.0f);
+            }
+            else {
+                temp = (rotorSpeed[i] - 0.66667f) * 3.0f;
+                drone->parts[2 + i].color = glm::vec4(1.0f, 1.0f - temp, 0.0f, 0.0f);
+            }
+        }
+    }
+    return rotorSpeed;
 }
 
 void WidgetOpenGLDraw::startRecording() {
@@ -505,6 +579,29 @@ void WidgetOpenGLDraw::replay() {
 
 }
 
+void WidgetOpenGLDraw::initPrediction() {
+    prediction = new Group();
+    for(float i = 0.0f; i < 0.95f; i += 0.1f) {
+        addObject("Objects/kocka.obj");
+        allObjects.back().color = glm::vec4(1.0f, 1.0f, 0.8f, i);
+        allObjects.back().visible = false;
+        allObjects.back().scale = glm::vec3(0.02f - (i * 0.015f), 0.02f - (i * 0.015f), 0.02f - (i * 0.015f));
+        allObjects.back().rot = glm::vec3(45.0f, 0.0f, 45.0f);
+        prediction->addPart(allObjects.back());
+    }
+    allGroups.push_back(prediction);
+}
+
+void WidgetOpenGLDraw::hidePrediction() {
+    for(uint8_t i = 0; i < 10; i++)
+        prediction->parts[i].visible = false;
+}
+
+void WidgetOpenGLDraw::showPrediction() {
+    for(uint8_t i = 0; i < 10; i++)
+        prediction->parts[i].visible = true;
+}
+
 void Object::generateM() {
     M = glm::mat4(1);
 
@@ -512,15 +609,15 @@ void Object::generateM() {
 
     //M = glm::scale(scaleM, this->parent->scale);
     M = glm::translate(M, this->parent->pos);
-    glm::mat4 scaleM = glm::mat4(glm::vec4(this->parent->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, this->parent->scale[Y], 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, this->parent->scale[Z], 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    M = M * scaleM;
     M = glm::rotate_slow(M, glm::radians(this->parent->rot[Y]), glm::vec3(0, 1, 0));
     M = glm::rotate_slow(M, glm::radians(this->parent->rot[X]), glm::vec3(1, 0, 0));
     M = glm::rotate_slow(M, glm::radians(this->parent->rot[Z]), glm::vec3(0, 0, 1));
+    glm::mat4 scaleM = glm::mat4(glm::vec4(this->parent->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, this->parent->scale[Y], 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, this->parent->scale[Z], 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    M = M * scaleM;
 
     M = glm::translate(M, this->pos);
-    M = glm::rotate_slow(M, glm::radians(this->rot[Y]), glm::vec3(0, 1, 0));
     M = glm::rotate_slow(M, glm::radians(this->rot[X]), glm::vec3(1, 0, 0));
+    M = glm::rotate_slow(M, glm::radians(this->rot[Y]), glm::vec3(0, 1, 0));
     M = glm::rotate_slow(M, glm::radians(this->rot[Z]), glm::vec3(0, 0, 1));
     scaleM = glm::mat4(glm::vec4(this->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, this->scale[Y], 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, this->scale[Z], 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     M = M * scaleM;
@@ -548,23 +645,23 @@ void WidgetOpenGLDraw::addDrone() {
     g->addPart(allObjects.back());
     addObject("Objects/Propeller.obj");
     g->addPart(allObjects.back());
-    g->parts.back().pos = glm::vec3(0.084944f, 0.031319f, 0.086413f);   // BL
-    addObject("Objects/Propeller.obj");
-    g->addPart(allObjects.back());
-    g->parts.back().pos = glm::vec3(-0.084944f, 0.031319f, 0.086413f);  // BR
-    addObject("Objects/Propeller.obj");
-    g->addPart(allObjects.back());
     g->parts.back().pos = glm::vec3(0.084944f, 0.031319f, -0.086413f);  // FL
     addObject("Objects/Propeller.obj");
     g->addPart(allObjects.back());
     g->parts.back().pos = glm::vec3(-0.084944f, 0.031319f, -0.086413f); // FR
+    addObject("Objects/Propeller.obj");
+    g->addPart(allObjects.back());
+    g->parts.back().pos = glm::vec3(0.084944f, 0.031319f, 0.086413f);   // BR
+    addObject("Objects/Propeller.obj");
+    g->addPart(allObjects.back());
+    g->parts.back().pos = glm::vec3(-0.084944f, 0.031319f, 0.086413f);   // BL
 
     g->parts[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
-    g->parts[1].color = glm::vec4(0.0f, 0.5f, 0.0f, 0.0f);
+    g->parts[1].color = glm::vec4(0.0f, 0.6f, 0.0f, 0.0f);
     g->parts[2].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-    g->parts[3].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    g->parts[4].color = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
-    g->parts[5].color = glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
+    g->parts[3].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    g->parts[4].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    g->parts[5].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     allGroups.push_back(g);
 
     drone = g;
@@ -580,6 +677,7 @@ void WidgetOpenGLDraw::addHouse(glm::vec3 coords) {
     H->addPart(allObjects.back());
     addObject("Objects/streha.obj");
     allObjects.back().color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    allObjects.back().scale = glm::vec3(1.1f, 1.0f, 1.1f);
     H->addPart(allObjects.back());
     H->pos = coords;
     H->rot = glm::vec3(0.0f, rand() % 360, 0.0f);
@@ -848,6 +946,8 @@ void WidgetOpenGLDraw::paintGL() {
         }
 
         for(unsigned int j = 0; j < allGroups[i]->parts.size(); j++) {
+            if(!allGroups[i]->parts[j].visible)
+                continue;
             gl->glBindVertexArray(allGroups[i]->parts[j].id_VAO_object);
             gl->glUseProgram(id_sencilni_program);
 
