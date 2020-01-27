@@ -9,6 +9,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     for(int i = 0; i < list.size(); i++) {
         ui->COMPortComboBox->addItem(list[i].portName());
     }
+    ui->bStartRec->setStyleSheet("color: red;");
+    ui->bStop->setStyleSheet("color: red;");
+    ui->bStartReplay->setStyleSheet("color: green;");
+    ui->bStartRec->setEnabled(false);
+    ui->bStop->setEnabled(false);
+    ui->bStartReplay->setEnabled(false);
+    ui->widget->setFocus();
 }
 
 MainWindow::~MainWindow(){
@@ -17,35 +24,6 @@ MainWindow::~MainWindow(){
 
 void MainWindow::on_actionTest_triggered(){
 	QMessageBox::information(this,"Test title","Test test");
-}
-
-void MainWindow::on_pushButtonRotacija_clicked(){
-    ui->widget->MoveObjXPlus();
-}
-
-void MainWindow::on_pushButton_5_pressed()
-{
-    ui->widget->MoveObjXMinus();
-}
-
-void MainWindow::on_pushButton_clicked()
-{
-    ui->widget->MoveObjYPlus();
-}
-
-void MainWindow::on_pushButton_4_clicked()
-{
-    ui->widget->MoveObjYMinus();
-}
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    ui->widget->MoveObjZPlus();
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-    ui->widget->MoveObjZMinus();
 }
 
 void MainWindow::on_bMoveAround_clicked()
@@ -60,29 +38,38 @@ void MainWindow::on_bRefreshCOMPort_clicked()
     for(int i = 0; i < list.size(); i++) {
         ui->COMPortComboBox->addItem(list[i].portName());
     }
+    ui->widget->setFocus();
 }
 
 void MainWindow::on_bConnectCOMPort_clicked()
 {
+    ui->bStartRec->setEnabled(true);
+    ui->bStartReplay->setEnabled(false);
+    ui->widget->setFocus();
     ui->widget->openSerialPort(ui->COMPortComboBox->itemText(ui->COMPortComboBox->currentIndex()));
 }
 
 void MainWindow::on_bStartRec_clicked()
 {
+    ui->bStop->setEnabled(true);
+    ui->bStartReplay->setEnabled(false);
+    ui->bStartRec->setEnabled(false);
+    ui->widget->setFocus();
     ui->widget->startRecording();
 }
 
-void MainWindow::on_bStopRec_clicked()
+void MainWindow::on_bStop_clicked()
 {
-    ui->widget->stopRecording();
+    ui->bStop->setEnabled(false);
+    ui->bStartRec->setEnabled(true);
+    ui->bStartReplay->setEnabled(true);
+    ui->widget->setFocus();
+    ui->widget->stop();
 }
 
 void MainWindow::on_bStartReplay_clicked()
 {
+    ui->bStop->setEnabled(true);
+    ui->widget->setFocus();
     ui->widget->startReplay();
-}
-
-void MainWindow::on_bStopReplay_clicked()
-{
-    ui->widget->stopReplay();
 }

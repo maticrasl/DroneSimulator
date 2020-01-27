@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <QtSerialPort>
+#include <iostream>
+#include <fstream>
 
 enum Coordinate {X, Y, Z};
 enum CAM {LOOKAT_CAM, DRONE_CAM, FREE_CAM};
@@ -74,13 +76,15 @@ public:
 
     void startRecording();
     void stopRecording();
+    void stop();
     void startReplay();
     void stopReplay();
     void record(uint16_t value[]);
-    void replay();
+    void replay(uint16_t value[]);
     void initPrediction();
     void hidePrediction();
     void showPrediction();
+    void clearGroup(Group* g);
 
     void addDrone();
     void addHouse(glm::vec3 coords);
@@ -88,6 +92,13 @@ public:
     void generateTerrain();
 
 private:
+    void compressRecord(uint16_t value[8]);
+    uint16_t * decompressReplay();
+    void startCompressRecording();
+    void stopCompressRecording();
+    void startDecompressReplay();
+    void stopDecompressReplay();
+
     void PrevediSencilnike();
     void printProgramInfoLog(GLuint obj);
     void printShaderInfoLog(GLuint obj);
@@ -117,17 +128,18 @@ private:
 
     Group* drone;
     Group* prediction;
+    Group* trajectory;
 
     Object Light;
     glm::vec3 lightPos = glm::vec3(0.0f, 150.0f, 0.0f);
     glm::vec3 lightColor = glm::vec3(lightColor);
-    float lightPower = 150.0f;
+    float lightPower = 200.0f;
 
     QSerialPort serialPort;
 
-    // Variables, used for simulation
-    const float vMax = 150.0f;   // Maksimalna hitrost (m/s)
-    const float Tfull = 8.0f;  // Maksimalna moč motorjev (N)
+    // Spremenljivke, uporabljene za simulacijo fizike
+    const float vMax = 150.0f;  // Maksimalna hitrost (m/s)
+    const float Tfull = 8.0f;   // Maksimalna moč motorjev (N)
     const float m = 0.4f;       // Masa drona (kg)
     const float g = 9.81f;      // Grafitacijski pospešek (m/s^2)
     const glm::vec3 fg = glm::vec3(0, -3.924, 0);   // Sila gravitacije (N)

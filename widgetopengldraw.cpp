@@ -13,6 +13,312 @@
 #include <QTextStream>
 #include <QtSerialPort/QSerialPortInfo>
 
+// Kompresija
+std::fstream recordFile;
+
+byte buffoutbyte = 0b00000000;
+int buffoutcount = 0;
+byte buffinbyte = 0b00000000;
+int buffincount = 8;
+std::ofstream outfile;
+std::ifstream infile;
+std::ifstream innfile;
+int encodelast[5] = {0,0,0,0,0};
+int decodelast[5] = {0,0,0,0,0};
+int repeatcounter[5] = {0,0,0,0,0};
+int repeatincounter[5] = {0,0,0,0,0};
+
+std::ofstream outorig;
+std::ofstream outdecode;
+
+void writeBit(bool bit)
+{
+    buffoutbyte |= bit << (7-buffoutcount);
+    buffoutcount++;
+    if(buffoutcount == 8)
+    {
+        char lol = buffoutbyte;
+        outfile.write(&lol,1);
+        buffoutbyte = 0;
+        buffoutcount = 0;
+    }
+}
+void clearWriteBits()
+{
+    char lol = buffoutbyte;
+    outfile.write(&lol,1);
+    buffoutbyte = 0;
+    buffoutcount = 0;
+}
+bool readBit()
+{
+    if(buffincount == 8)
+    {
+        char lol;
+        infile.read(&lol,1);
+        buffinbyte = lol;
+        buffincount=0;
+    }
+    bool ret = (buffinbyte >> (7-buffincount)) & 1;
+    buffincount++;
+    return ret;
+
+}
+void clearReadBits()
+{
+        buffincount = 8;
+        buffinbyte = 0;
+}
+
+int16_t getNumDecode(byte b)
+{
+    byte num[32]={0b00000000,0b00000001,0b00000010,0b00000011,0b00000100,0b00000101,0b00000110,0b00000111,0b00001000,0b00001001,0b00001010,0b00001011,0b00001100,0b00001101,0b00001110,0b00001111,0b00010000,0b00010001,0b00010010,0b00010011,0b00010100,0b00010101,0b00010110,0b00010111,0b00011000,0b00011001,0b00011010,0b00011011,0b00011100,0b00011101,0b00011110,0b00011111};
+    for(int  i = 0;i!=32;i++)
+    {
+        if(num[i] == b)
+            return i;
+    }
+    return 32;
+}
+
+void WidgetOpenGLDraw::startCompressRecording() {
+    outorig.open("C:/Users/GTAbl/Desktop/Racunalniska_Grafika/DroneSimulator-master/Compressed/orig.bin");
+    outfile.open("C:/Users/GTAbl/Desktop/Racunalniska_Grafika/DroneSimulator-master/Compressed/compressed.bin");
+    recording = true;
+    float posx = 1.3;
+    float posy = 3.3;
+    float posz = 0.4;
+    float rotx = 1.1;
+    float roty = 4.9;
+    float rotz = 5;
+
+    outfile.write((const char *)&posx,sizeof(float));
+    outfile.write((const char *)&posy,sizeof(float));
+    outfile.write((const char *)&posz,sizeof(float));
+    outfile.write((const char *)&rotx,sizeof(float));
+    outfile.write((const char *)&roty,sizeof(float));
+    outfile.write((const char *)&rotz,sizeof(float));
+
+
+
+    // Open file for writing
+    // File format: najprej shrani trenutno pozicijo in orientacijo drona (6 floatov)
+    //              Nato shranjuje kompresirane vrednosti prvih 5 kanalov
+
+    // Predpotavi, da je COM port že odprt
+}
+
+void WidgetOpenGLDraw::stopCompressRecording() {
+    recording = false;
+    outorig.close();
+    outfile.close();
+}
+
+void WidgetOpenGLDraw::startDecompressReplay() {
+    replaying = true;
+    // Open file for reading
+    float posx;
+    float posy;
+    float posz;
+    float rotx;
+    float roty;
+    float rotz;
+    outdecode.open("C:/Users/GTAbl/Desktop/Racunalniska_Grafika/DroneSimulator-master/Compressed/decode.bin");
+    infile.open("C:/Users/GTAbl/Desktop/Racunalniska_Grafika/DroneSimulator-master/Compressed/compressed.bin");
+    innfile.open("C:/Users/GTAbl/Desktop/Racunalniska_Grafika/DroneSimulator-master/Compressed/orig.bin");
+    infile.read((char *)&posx,sizeof(float));
+    infile.read((char *)&posy,sizeof(float));
+    infile.read((char *)&posz,sizeof(float));
+    infile.read((char *)&rotx,sizeof(float));
+    infile.read((char *)&roty,sizeof(float));
+    infile.read((char *)&rotz,sizeof(float));
+}
+
+void WidgetOpenGLDraw::stopDecompressReplay() {
+    replaying = false;
+    // Close file
+    outdecode.close();
+    innfile.close();
+    infile.close();
+}
+
+void WidgetOpenGLDraw::compressRecord(uint16_t value[8]) {
+    byte num[32]={0b00000000,0b00000001,0b00000010,0b00000011,0b00000100,0b00000101,0b00000110,0b00000111,0b00001000,0b00001001,0b00001010,0b00001011,0b00001100,0b00001101,0b00001110,0b00001111,0b00010000,0b00010001,0b00010010,0b00010011,0b00010100,0b00010101,0b00010110,0b00010111,0b00011000,0b00011001,0b00011010,0b00011011,0b00011100,0b00011101,0b00011110,0b00011111};
+
+    if(encodelast[0]==0){
+        for(int i = 0; i!= 5 ;i++)
+        {
+            encodelast[i] = value[i];
+            outfile.write((const char *)&value[i],sizeof(uint16_t));
+            outorig.write((const char *)&value[i],sizeof(uint16_t));
+        }
+    }else{
+    int diff[5];
+    for(int i = 0; i!= 5 ;i++)
+    {
+        diff[i] = encodelast[i] - value[i];
+        encodelast[i] = value[i];
+        if(repeatcounter[i] != 0 && diff != 0){
+            writeBit(0);
+            writeBit(1);
+            writeBit((num[repeatcounter[i]-1] >> 2)&1);
+            writeBit((num[repeatcounter[i]-1] >> 1)&1);
+            writeBit((num[repeatcounter[i]-1])&1);
+            repeatcounter[i] = 0;
+        }else{
+            if(abs(diff[i]) == 0)
+            {
+                repeatcounter[i]++;
+                if(repeatcounter[i]==8)
+                {
+                    writeBit(0);
+                    writeBit(1);
+                    writeBit(1);
+                    writeBit(1);
+                    writeBit(1);
+                    repeatcounter[i] = 0;
+                }
+            }else if(abs(diff[i])<3){
+                writeBit(0);
+                writeBit(0);
+                writeBit(0);
+                writeBit(0);
+                writeBit((num[diff[i]+2] >> 2)&1);
+                writeBit((num[diff[i]+2] >> 1)&1);
+                writeBit((num[diff[i]+2])&1);
+            }else if(abs(diff[i])<7){
+                writeBit(0);
+                writeBit(0);
+                writeBit(0);
+                writeBit(1);
+                writeBit((num[diff[i]+6] >> 3)&1);
+                writeBit((num[diff[i]+6] >> 2)&1);
+                writeBit((num[diff[i]+6] >> 1)&1);
+                writeBit((num[diff[i]+6])&1);
+            }else if(abs(diff[i])<15){
+                writeBit(0);
+                writeBit(0);
+                writeBit(1);
+                writeBit(0);
+                writeBit((num[diff[i]+14] >> 4)&1);
+                writeBit((num[diff[i]+14] >> 3)&1);
+                writeBit((num[diff[i]+14] >> 2)&1);
+                writeBit((num[diff[i]+14] >> 1)&1);
+                writeBit((num[diff[i]+14])&1);
+            }else if(abs(diff[i])<31){
+                writeBit(0);
+                writeBit(0);
+                writeBit(1);
+                writeBit(1);
+                writeBit((num[diff[i]+30] >> 5)&1);
+                writeBit((num[diff[i]+30] >> 4)&1);
+                writeBit((num[diff[i]+30] >> 3)&1);
+                writeBit((num[diff[i]+30] >> 2)&1);
+                writeBit((num[diff[i]+30] >> 1)&1);
+                writeBit((num[diff[i]+30])&1);
+            }else if(abs(diff[i])>30){
+                writeBit(1);
+                writeBit(0);
+                clearWriteBits();
+                outfile.write((const char *)&value[i],sizeof(uint16_t));
+            }
+        }
+    }
+    }
+    outorig.write((const char *)&value[0],sizeof(uint16_t));
+    outorig.write((const char *)&value[1],sizeof(uint16_t));
+    outorig.write((const char *)&value[2],sizeof(uint16_t));
+    outorig.write((const char *)&value[3],sizeof(uint16_t));
+    outorig.write((const char *)&value[4],sizeof(uint16_t));
+}
+
+uint16_t * WidgetOpenGLDraw::decompressReplay() {
+    uint16_t ret[5];
+    if(decodelast[0]==0){
+        for(int i = 0; i!= 5 ;i++)
+        {
+            infile.read((char *)&ret[i],sizeof(uint16_t));
+            decodelast[i] = ret[i];
+        }
+        outdecode.write((const char *)&ret[0],sizeof(uint16_t));
+        outdecode.write((const char *)&ret[1],sizeof(uint16_t));
+        outdecode.write((const char *)&ret[2],sizeof(uint16_t));
+        outdecode.write((const char *)&ret[3],sizeof(uint16_t));
+        outdecode.write((const char *)&ret[4],sizeof(uint16_t));
+        return ret;
+    }
+    int diff[5];
+    int first[5];
+    byte buff = 0;
+    for(int i = 0; i!= 5 ;i++)
+    {
+        buff |= readBit() << 1;
+        buff |= readBit();
+        first[i] = getNumDecode(buff);
+        buff = 0;
+        if(repeatincounter[i] == 0)
+        {
+        if(first[i] == 0)
+        {
+            buff |= readBit() << 1;
+            buff |= readBit();
+            diff[i] = getNumDecode(buff);
+            buff = 0;
+            if(diff[i] == 0){
+                buff |= readBit() << 1;
+                buff |= readBit();
+                ret[i] = decodelast[i]+getNumDecode(buff)-2;
+            }else if(diff[i] == 1){
+                buff |= readBit() << 2;
+                buff |= readBit() << 1;
+                buff |= readBit();
+                ret[i] = decodelast[i]+getNumDecode(buff)-6;
+            }else if(diff[i] == 2){
+                buff |= readBit() << 3;
+                buff |= readBit() << 2;
+                buff |= readBit() << 1;
+                buff |= readBit();
+                ret[i] = decodelast[i]+getNumDecode(buff)-14;
+            }else if(diff[i] == 3){
+                buff |= readBit() << 4;
+                buff |= readBit() << 3;
+                buff |= readBit() << 2;
+                buff |= readBit() << 1;
+                buff |= readBit();
+                ret[i] = decodelast[i]+getNumDecode(buff)-30;
+            }
+            buff = 0;
+        }else if(first[i] == 1){
+            buff |= readBit() << 2;
+            buff |= readBit() << 1;
+            buff |= readBit();
+            repeatincounter[i] = getNumDecode(buff)+1;
+            ret[i] = decodelast[i];
+            repeatincounter[i]--;
+        }else if(first[i] == 2){
+            clearReadBits();
+            infile.read((char *)&ret[i],sizeof(uint16_t));
+        }else if(first[i] == 3){
+            //stopReplay(); //TODO?
+            ret[i] = decodelast[i];
+        }
+
+        }else{
+            ret[i] = decodelast[i];
+            repeatincounter[i]--;
+        }
+        decodelast[i] = ret[i];
+
+    }
+    //ret = calccoords();
+    outdecode.write((const char *)&ret[0],sizeof(uint16_t));
+    outdecode.write((const char *)&ret[1],sizeof(uint16_t));
+    outdecode.write((const char *)&ret[2],sizeof(uint16_t));
+    outdecode.write((const char *)&ret[3],sizeof(uint16_t));
+    outdecode.write((const char *)&ret[4],sizeof(uint16_t));
+    return ret;
+}
+
 struct Vertice {
     glm::vec3 coords;
     glm::vec2 texture;
@@ -251,7 +557,7 @@ void WidgetOpenGLDraw::generateFloor(glm::vec3 origin) {
     for(unsigned int i = 0; i < static_cast<unsigned int>(O.vertices.size()); i++)
         allVertices.push_back(O.vertices[i]);
 
-    O.scale = glm::vec3(1000.0f, 1.0f, 1000.0f);
+    O.scale = glm::vec3(1.0f, 1.0f, 1.0f);
     allObjects.push_back(O);
     //loadTexture("C:/Faks/RG/Vaja5/b.jpg");
 }
@@ -393,7 +699,6 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
     uint8_t i;
     initPrediction();
     while(1) {
-        //makeCurrent();
         if(serialPort.waitForReadyRead(1)) {
             readData = serialPort.readAll();
             readString = readData;
@@ -422,7 +727,7 @@ void WidgetOpenGLDraw::infiniteReadSerial() {
                 selectedCamera = FREE_CAM;
 
             if(replaying == true)
-                replay();
+                replay(value);
             else {
                 if(recording)
                     record(value);
@@ -559,30 +864,68 @@ void WidgetOpenGLDraw::startRecording() {
     // File format: najprej shrani trenutno pozicijo in orientacijo drona (6 floatov)
     //              Nato shranjuje kompresirane vrednosti prvih 5 kanalov
 
-    // Predpotavi, da je COM port že odprt
+    // Predpostavi, da je COM port že odprt
+
+    recordFile.open("recording.bin", std::ios::out | std::ios::trunc | std::ios::binary);
+
+    recordFile.write((char*)&drone->pos[X], sizeof(float));
+    recordFile.write((char*)&drone->pos[Y], sizeof(float));
+    recordFile.write((char*)&drone->pos[Z], sizeof(float));
+    recordFile.write((char*)&drone->rot[X], sizeof(float));
+    recordFile.write((char*)&drone->rot[Y], sizeof(float));
+    recordFile.write((char*)&drone->rot[Z], sizeof(float));
+}
+
+void WidgetOpenGLDraw::stop() {
+    if(recording)
+        stopRecording();
+    else
+        stopReplay();
 }
 
 void WidgetOpenGLDraw::stopRecording() {
     recording = false;
     // Close file
+    recordFile.close();
 }
 
 void WidgetOpenGLDraw::startReplay() {
     replaying = true;
     // Open file for reading
+    recordFile.open("recording.bin", std::ios::in | std::ios::binary);
+    recordFile.read((char*)&drone->pos[X], sizeof(float));
+    recordFile.read((char*)&drone->pos[Y], sizeof(float));
+    recordFile.read((char*)&drone->pos[Z], sizeof(float));
+    recordFile.read((char*)&drone->rot[X], sizeof(float));
+    recordFile.read((char*)&drone->rot[Y], sizeof(float));
+    recordFile.read((char*)&drone->rot[Z], sizeof(float));
 }
 
 void WidgetOpenGLDraw::stopReplay() {
     replaying = false;
     // Close file
+    recordFile.close();
 }
 
 void WidgetOpenGLDraw::record(uint16_t value[]) {
-
+    recordFile.write((char*)&value[0], 2);
+    recordFile.write((char*)&value[1], 2);
+    recordFile.write((char*)&value[2], 2);
+    recordFile.write((char*)&value[3], 2);
+    recordFile.write((char*)&value[4], 2);
 }
 
-void WidgetOpenGLDraw::replay() {
+void WidgetOpenGLDraw::replay(uint16_t value[]) {
+    recordFile.read((char*)&value[0], 2);
+    recordFile.read((char*)&value[1], 2);
+    recordFile.read((char*)&value[2], 2);
+    recordFile.read((char*)&value[3], 2);
+    recordFile.read((char*)&value[4], 2);
 
+    if(recordFile.eof())
+        stopReplay();
+
+    calculateForces(value);
 }
 
 void WidgetOpenGLDraw::initPrediction() {
@@ -608,12 +951,16 @@ void WidgetOpenGLDraw::showPrediction() {
         prediction->parts[i].visible = true;
 }
 
+void WidgetOpenGLDraw::clearGroup(Group* g) {
+    for(unsigned int i = 0; i < g->parts.size(); i++) {
+        gl->glDeleteVertexArrays(1, &g->parts[i].id_VAO_object);
+    }
+    g->parts.clear();
+}
+
 void Object::generateM() {
     M = glm::mat4(1);
 
-    //glm::mat4 scaleM = glm::mat4(glm::vec4(this->parent->scale[X], 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-    //M = glm::scale(scaleM, this->parent->scale);
     M = glm::translate(M, this->parent->pos);
     M = glm::rotate_slow(M, glm::radians(this->parent->rot[Y]), glm::vec3(0, 1, 0));
     M = glm::rotate_slow(M, glm::radians(this->parent->rot[X]), glm::vec3(1, 0, 0));
@@ -671,6 +1018,7 @@ void WidgetOpenGLDraw::addDrone() {
     allGroups.push_back(g);
 
     drone = g;
+    drone->generateMs();
 }
 
 void WidgetOpenGLDraw::addHouse(glm::vec3 coords) {
@@ -894,7 +1242,7 @@ void WidgetOpenGLDraw::initializeGL() {
 
     glEnable(GL_DEPTH_TEST);
 
-    generateFloor(glm::vec3(0, -0.5f, 0));        // Tla
+    generateFloor(glm::vec3(0, -1.5f, 0));        // Tla
 
     Group *g = new Group();
     g->addPart(allObjects[0]);
@@ -903,7 +1251,7 @@ void WidgetOpenGLDraw::initializeGL() {
     gl->glGenVertexArrays(1, &allGroups.back()->parts.back().id_VAO_object);
     gl->glBindVertexArray(allGroups.back()->parts.back().id_VAO_object);
 
-    Light.pos = glm::vec3(0.0f, 30.0f, 0.0f);
+    //Light.pos = glm::vec3(0.0f, 30.0f, 0.0f);
 
     //addObject("Objects/kocka.obj");
     //allObjects[0].pos[Y] = -1.0f;
@@ -926,6 +1274,12 @@ void WidgetOpenGLDraw::initializeGL() {
     if (err != 0) {
         std::cerr << "OpenGL init napaka: " << err << std::endl;
     }
+
+    addObject("Objects/kocka.obj");
+    allObjects.back().scale = glm::vec3(1000.0f, 1.0f, 1000.0f);
+    allObjects.back().color = glm::vec4(0.6, 0.9, 0.2, 0.0);
+    allObjects.back().pos = glm::vec3(0.0f, -1.0f, 0.0f);
+    g->addPart(allObjects.back());
 
     addDrone();
     //addHouse(glm::vec3(10.0f, 0.0f, 10.0f));
@@ -997,7 +1351,7 @@ void WidgetOpenGLDraw::paintGL() {
 
     const unsigned int err = gl->glGetError();
     if (err != 0) {
-        std::cerr << "penGL napaka: " << err << std::endl;
+        std::cerr << "OpenGL napaka: " << err << std::endl;
     }
 }
 
