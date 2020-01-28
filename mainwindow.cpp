@@ -43,6 +43,8 @@ void MainWindow::on_bRefreshCOMPort_clicked()
 
 void MainWindow::on_bConnectCOMPort_clicked()
 {
+    if(ui->COMPortComboBox->count() == 0)
+        return;
     ui->bStartRec->setEnabled(true);
     ui->bStartReplay->setEnabled(false);
     ui->widget->setFocus();

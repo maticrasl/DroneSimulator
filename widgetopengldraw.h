@@ -133,7 +133,7 @@ private:
     Object Light;
     glm::vec3 lightPos = glm::vec3(0.0f, 150.0f, 0.0f);
     glm::vec3 lightColor = glm::vec3(lightColor);
-    float lightPower = 200.0f;
+    float lightPower = 0.4f;
 
     QSerialPort serialPort;
 

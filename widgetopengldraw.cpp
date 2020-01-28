@@ -1205,9 +1205,12 @@ void WidgetOpenGLDraw::PrevediSencilnike() {
         fss += "    vec3 R = reflect(-l, n);                                                \n";
         fss += "    float cosAlpha = clamp(dot(E, R), 0, 1);                                \n";
         fss += "    vec4 MaterialAmbientColor = 0.3f * materialColor;                       \n";
+        //fss += "    out_Color = MaterialAmbientColor +                                        ";
+        //fss += "                materialColor * cosTheta * lightPower / (dist * dist) +     \n";
+        //fss += "                vec4(1, 1, 1, 1) * lightPower * pow(cosAlpha, shining) / (dist * dist);  \n";
         fss += "    out_Color = MaterialAmbientColor +                                        ";
-        fss += "                materialColor * cosTheta * lightPower / (dist * dist) +     \n";
-        fss += "                vec4(1, 1, 1, 1) * lightPower * pow(cosAlpha, shining) / (dist * dist);  \n";
+        fss += "                materialColor * cosTheta * lightPower +     \n";
+        fss += "                vec4(1, 1, 1, 1) * lightPower * pow(cosAlpha, shining);  \n";
         //fss += "    out_Color = materialColor;                                              \n";
         fss += " }                                                                          \n";
 
@@ -1299,31 +1302,35 @@ void WidgetOpenGLDraw::paintGL() {
     gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Light.pos = glm::vec3(drone->pos[X], drone->pos[Y] + 30.0f, drone->pos[Z]);
 
+    // projekcijska matrika
+    glm::mat4 P;
+
+    P = glm::perspective(glm::radians(FOV), float(width()) / height(), 0.01f, 1000.0f);
+
+    // Matrika pogleda (view)
+    glm::mat4 V = glm::mat4(1);
+
+    switch(selectedCamera) {
+    case LOOKAT_CAM:
+        V = glm::lookAt(camera[LOOKAT_CAM].pos, glm::normalize(drone->pos - camera[LOOKAT_CAM].pos) + camera[LOOKAT_CAM].pos, glm::vec3(0.0f, 1.0f, 0.0f));
+        break;
+    case DRONE_CAM:
+        V = glm::translate(V, glm::vec3(0.0f, -0.15f, -0.6f));
+        V = glm::rotate_slow(V, glm::radians(-drone->rot[Y]), glm::vec3(0.0f, 1.0f, 0.0f));
+        V = glm::translate(V, -drone->pos);
+        break;
+    case FREE_CAM:
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[X]), glm::vec3(1, 0, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
+        V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Z]), glm::vec3(0, 0, 1));
+        V = glm::translate(V, camera[FREE_CAM].pos);
+        break;
+    }
+
+    glm::mat4 PV = P * V;
+
     for(unsigned int i = 0; i < allGroups.size(); i++) {
-        // projekcijska matrika
-        glm::mat4 P;
 
-        P = glm::perspective(glm::radians(FOV), float(width()) / height(), 0.01f, 1000.0f);
-
-        // Matrika pogleda (view)
-        glm::mat4 V = glm::mat4(1);
-
-        switch(selectedCamera) {
-        case LOOKAT_CAM:
-            V = glm::lookAt(camera[LOOKAT_CAM].pos, glm::normalize(drone->pos - camera[LOOKAT_CAM].pos) + camera[LOOKAT_CAM].pos, glm::vec3(0.0f, 1.0f, 0.0f));
-            break;
-        case DRONE_CAM:
-            V = glm::translate(V, glm::vec3(0.0f, -0.15f, -0.6f));
-            V = glm::rotate_slow(V, glm::radians(-drone->rot[Y]), glm::vec3(0.0f, 1.0f, 0.0f));
-            V = glm::translate(V, -drone->pos);
-            break;
-        case FREE_CAM:
-            V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[X]), glm::vec3(1, 0, 0));
-            V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Y]), glm::vec3(0, 1, 0));
-            V = glm::rotate_slow(V, glm::radians(camera[FREE_CAM].rot[Z]), glm::vec3(0, 0, 1));
-            V = glm::translate(V, camera[FREE_CAM].pos);
-            break;
-        }
 
         for(unsigned int j = 0; j < allGroups[i]->parts.size(); j++) {
             if(!allGroups[i]->parts[j].visible)
@@ -1331,7 +1338,7 @@ void WidgetOpenGLDraw::paintGL() {
             gl->glBindVertexArray(allGroups[i]->parts[j].id_VAO_object);
             gl->glUseProgram(id_sencilni_program);
 
-            glm::mat4 PVM = P * V * allGroups[i]->parts[j].M;
+            glm::mat4 PVM = PV * allGroups[i]->parts[j].M;
 
             gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "PVM"), 1, GL_FALSE, glm::value_ptr(PVM));
             gl->glUniformMatrix4fv(gl->glGetUniformLocation(id_sencilni_program, "M"), 1, GL_FALSE, glm::value_ptr(allGroups[i]->parts[j].M));
